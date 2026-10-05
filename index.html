@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#512da8">
+<meta name="description" content="Village Fund">
+<title>Village Fund</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f5f5f7;color:#222;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+header{background:linear-gradient(135deg,#512da8,#673ab7);color:#fff;padding:28px 16px;text-align:center}
+header h1{margin:0;font-size:26px}
+header p{margin:7px 0 0;opacity:.9}
+.container{max-width:760px;margin:auto;padding:14px}
+.card{background:#fff;border-radius:14px;padding:18px;margin:0 0 14px;box-shadow:0 2px 12px #0000000d}
+h2{font-size:20px;margin:0 0 12px}
+h3{margin:18px 0 10px}
+label{display:block;font-weight:600;margin:12px 0 6px}
+input,select{width:100%;padding:12px;border:1px solid #d7d7dc;border-radius:9px;font-size:16px;background:#fff}
+button{border:0;border-radius:9px;padding:12px 15px;font-size:15px;font-weight:700;cursor:pointer}
+.primary{background:#512da8;color:#fff;width:100%;margin-top:12px}
+.secondary{background:#eee;color:#333}
+.danger{background:#c62828;color:#fff}
+.success{background:#2e7d32;color:#fff}
+.info{background:#f3efff;border-left:4px solid #673ab7;padding:14px;border-radius:8px;margin:12px 0;line-height:1.55}
+.warning{background:#fff7e6;border-left:4px solid #ff9800;padding:14px;border-radius:8px;margin:12px 0;line-height:1.55}
+.success-message{background:#e8f5e9;border-left:4px solid #2e7d32;padding:14px;border-radius:8px;margin:12px 0}
+.error-message{background:#ffebee;border-left:4px solid #d32f2f;padding:14px;border-radius:8px;margin:12px 0}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.stat{background:#f7f7f7;padding:15px;border-radius:10px;text-align:center}
+.stat strong{display:block;font-size:21px;color:#512da8;margin-bottom:4px}
+.amount-display{text-align:center;font-size:30px;font-weight:800;color:#512da8;margin:16px 0}
+.table-container{overflow:auto}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px;border-bottom:1px solid #eee;text-align:left;white-space:nowrap}
+th{background:#f4f4f4}
+.admin-actions{display:flex;gap:7px;flex-wrap:wrap}
+.hidden{display:none!important}
+.small{font-size:13px;color:#666}
+footer{text-align:center;color:#777;padding:24px 10px;font-size:13px}
+.badge{display:inline-block;padding:4px 9px;border-radius:20px;background:#eee;font-size:12px;font-weight:700}
+@media(max-width:600px){.stats{grid-template-columns:1fr}.card{padding:15px}header h1{font-size:23px}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1 id="villageTitle">Village Fund</h1>
+  <p id="villageSubtitle">Community contribution fund</p>
+</header>
+
+<div class="container">
+
+<section class="card">
+  <h2>Fund Summary</h2>
+  <div class="stats">
+    <div class="stat">
+      <strong id="collectedAmount">₹0</strong>
+      Collected this month
+    </div>
+    <div class="stat">
+      <strong id="pendingAmount">₹0</strong>
+      Pending this month
+    </div>
+  </div>
+  <p id="summaryText" class="small">Loading...</p>
+</section>
+
+<section class="card">
+  <h2>Make a Contribution</h2>
+  <p>Enter the amount you want to contribute.</p>
+
+  <label for="customAmount">Contribution Amount</label>
+  <input id="customAmount" type="number" min="1" step="1" placeholder="Enter amount" oninput="amountChanged()">
+
+  <div class="amount-display">₹<span id="selectedAmount">0</span></div>
+
+  <div id="destinationDetails" class="info">Loading payment details...</div>
+
+  <div class="warning">
+    <strong>Payment process</strong><br><br>
+    1. Pay the displayed amount using the available payment method.<br>
+    2. Return to this page after payment.<br>
+    3. Enter your name, mobile number and UTR / transaction reference.<br>
+    4. The village administrator will verify the payment.
+  </div>
+
+  <button class="primary" type="button" onclick="showPaymentForm()">Continue to Payment Details</button>
+  <div id="paymentStatus"></div>
+</section>
+
+<section id="paymentForm" class="card hidden">
+  <h2>Submit Payment Details</h2>
+  <p class="small">Submit these details only after completing the payment.</p>
+
+  <label>Account Holder Name</label>
+  <input id="contributorName" type="text" placeholder="Enter account-holder name">
+
+  <label>Mobile Number</label>
+  <input id="contributorMobile" type="tel" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number">
+
+  <label>Amount Paid</label>
+  <input id="paymentAmount" type="number" min="1" step="1">
+
+  <label>UTR / Transaction Reference</label>
+  <input id="utrReference" type="text" placeholder="Enter UTR / transaction reference">
+
+  <label>Month</label>
+  <select id="paymentMonth"></select>
+
+  <label>Year</label>
+  <select id="paymentYear"></select>
+
+  <button class="primary" type="button" onclick="submitPayment()">Submit Payment</button>
+  <div id="submitStatus"></div>
+</section>
+
+<section class="card">
+  <h2>Verified Contributions</h2>
+  <p class="small">Only verified contributions are displayed. Mobile numbers and UTR numbers are never shown publicly.</p>
+  <div class="table-container">
+    <table>
+      <thead><tr><th>Name</th><th>Month</th><th>Amount</th></tr></thead>
+      <tbody id="publicContributions">
+        <tr><td colspan="3">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Admin</h2>
+
+  <div id="adminLogin">
+    <label>Email</label>
+    <input id="adminEmail" type="email" placeholder="Admin email">
+    <label>Password</label>
+    <input id="adminPassword" type="password" placeholder="Admin password">
+    <button class="primary" type="button" onclick="adminLogin()">Admin Login</button>
+    <div id="loginStatus"></div>
+  </div>
+
+  <div id="adminPanel" class="hidden">
+    <p><span class="badge" id="adminVillageBadge"></span></p>
+    <button class="secondary" type="button" onclick="adminLogout()">Logout</button>
+
+    <h3>Pending Payments</h3>
+    <div class="table-container">
+      <table>
+        <thead><tr><th>Name</th><th>Mobile</th><th>Amount</th><th>Month</th><th>UTR</th><th>Action</th></tr></thead>
+        <tbody id="pendingPayments"><tr><td colspan="6">Loading...</td></tr></tbody>
+      </table>
+    </div>
+
+    <h3>Village Payment Settings</h3>
+
+    <label>Village Name</label>
+    <input id="settingVillageName" type="text">
+
+    <label>Default Contribution Amount <span class="small">(optional)</span></label>
+    <input id="settingMonthlyAmount" type="number" min="1" step="1" placeholder="Leave empty if there is no default">
+
+    <label>UPI ID <span class="small">(optional)</span></label>
+    <input id="settingUpiId" type="text" placeholder="example@upi">
+
+    <label>UPI Name</label>
+    <input id="settingUpiName" type="text">
+
+    <label>Payment Instructions</label>
+    <input id="settingUpiInstructions" type="text">
+
+    <label>Bank Account Holder</label>
+    <input id="settingBankHolder" type="text">
+
+    <label>Bank Name</label>
+    <input id="settingBankName" type="text">
+
+    <label>Account Number</label>
+    <input id="settingAccountNumber" type="text">
+
+    <label>IFSC Code</label>
+    <input id="settingIfsc" type="text">
+
+    <button class="primary" type="button" onclick="saveSettings()">Save Settings</button>
+    <div id="settingsStatus"></div>
+  </div>
+</section>
+
+</div>
+
+<footer id="footerText">Village Fund</footer>
+
+<script>
+const SUPABASE_URL = "https://jegwmoundvbngyjgvytl.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "REPLACE_WITH_YOUR_SUPABASE_PUBLISHABLE_KEY";
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+let village = null;
+let villageSlug = "";
+let fundSettings = null;
+let selectedAmount = 0;
+
+const monthNames = [
+  "January","February","March","April","May","June",
+  "July","August","September","October","November","December"
+];
+
+document.addEventListener("DOMContentLoaded", initializeApp);
+
+async function initializeApp() {
+  try {
+    villageSlug = getVillageSlug();
+
+    if (!villageSlug) {
+      showFatal("Village URL is missing. Open the app using /<village-slug>, for example /penubaka.");
+      return;
+    }
+
+    initializeMonthYear();
+
+    const loaded = await loadVillage();
+    if (!loaded) return;
+
+    await loadSettings();
+    await loadFundProgress();
+    await loadPublicContributions();
+
+    applyDefaultAmount();
+    await checkAdminSession();
+  } catch (error) {
+    console.error(error);
+    showFatal("Unable to load this village. Please try again.");
+  }
+}
+
+function getVillageSlug() {
+  const parts = window.location.pathname
+    .split("/")
+    .map(x => x.trim())
+    .filter(Boolean);
+
+  return parts.length ? parts[0].toLowerCase() : "";
+}
+
+async function loadVillage() {
+  const { data, error } = await supabaseClient
+    .from("villages")
+    .select("id,name,slug,is_active")
+    .eq("slug", villageSlug)
+    .eq("is_active", true)
+    .single();
+
+  if (error || !data) {
+    showFatal("Village not found or inactive.");
+    return false;
+  }
+
+  village = data;
+
+  document.title = village.name + " Village Fund";
+  document.getElementById("villageTitle").textContent = village.name + " Village Fund";
+  document.getElementById("villageSubtitle").textContent = "Community contribution fund for " + village.name;
+  document.getElementById("footerText").textContent = village.name + " Village Fund";
+  document.getElementById("adminVillageBadge").textContent = village.name;
+
+  return true;
+}
+
+function showFatal(message) {
+  document.getElementById("villageTitle").textContent = "Village Fund";
+  document.getElementById("villageSubtitle").textContent = message;
+  document.querySelector(".container").innerHTML =
+    '<section class="card"><div class="error-message">' + escapeHtml(message) + '</div></section>';
+}
+
+function initializeMonthYear() {
+  const monthSelect = document.getElementById("paymentMonth");
+  const yearSelect = document.getElementById("paymentYear");
+  const now = new Date();
+  const currentMonth = now.getMonth() + 1;
+  const currentYear = now.getFullYear();
+
+  monthSelect.innerHTML = "";
+  monthNames.forEach((name, index) => {
+    const option = document.createElement("option");
+    option.value = index + 1;
+    option.textContent = name;
+    if (index + 1 === currentMonth) option.selected = true;
+    monthSelect.appendChild(option);
+  });
+
+  yearSelect.innerHTML = "";
+  for (let year = currentYear - 1; year <= currentYear + 1; year++) {
+    const option = document.createElement("option");
+    option.value = year;
+    option.textContent = year;
+    if (year === currentYear) option.selected = true;
+    yearSelect.appendChild(option);
+  }
+}
+
+function amountChanged() {
+  const value = Number(document.getElementById("customAmount").value);
+  selectedAmount = Number.isFinite(value) && value > 0 ? value : 0;
+  document.getElementById("selectedAmount").textContent =
+    selectedAmount ? selectedAmount.toLocaleString("en-IN") : "0";
+  document.getElementById("paymentAmount").value = selectedAmount || "";
+}
+
+function applyDefaultAmount() {
+  const value = fundSettings && fundSettings.monthly_amount;
+  if (value !== null && value !== undefined && Number(value) > 0) {
+    selectedAmount = Number(value);
+    document.getElementById("customAmount").value = selectedAmount;
+    amountChanged();
+  }
+}
+
+async function loadSettings() {
+  const { data, error } = await supabaseClient
+    .from("fund_settings")
+    .select("*")
+    .eq("village_id", village.id)
+    .single();
+
+  if (error) {
+    console.error(error);
+    document.getElementById("destinationDetails").innerHTML =
+      '<strong>Payment details unavailable.</strong><br>Please contact the village administrator.';
+    return;
+  }
+
+  fundSettings = data;
+  updatePaymentDetails();
+
+  document.getElementById("settingVillageName").value = data.village_name || village.name;
+  document.getElementById("settingMonthlyAmount").value = data.monthly_amount ?? "";
+  document.getElementById("settingUpiId").value = data.upi_id || "";
+  document.getElementById("settingUpiName").value = data.upi_name || "";
+  document.getElementById("settingUpiInstructions").value = data.upi_instructions || "";
+  document.getElementById("settingBankHolder").value = data.bank_account_holder || "";
+  document.getElementById("settingBankName").value = data.bank_name || "";
+  document.getElementById("settingAccountNumber").value = data.account_number || "";
+  document.getElementById("settingIfsc").value = data.ifsc_code || "";
+}
+
+function updatePaymentDetails() {
+  if (!fundSettings) return;
+
+  const bankHolder = fundSettings.bank_account_holder || "";
+  const bankName = fundSettings.bank_name || "";
+  const account = fundSettings.account_number || "";
+  const ifsc = fundSettings.ifsc_code || "";
+  const upiId = fundSettings.upi_id || "";
+  const upiName = fundSettings.upi_name || "";
+  const instructions = fundSettings.upi_instructions || "";
+
+  let html = "";
+
+  if (bankHolder || bankName || account || ifsc) {
+    html += "<strong>Bank Transfer</strong><br>";
+    if (bankHolder) html += "Account Holder: " + escapeHtml(bankHolder) + "<br>";
+    if (bankName) html += "Bank: " + escapeHtml(bankName) + "<br>";
+    if (account) html += "Account Number: " + escapeHtml(account) + "<br>";
+    if (ifsc) html += "IFSC: " + escapeHtml(ifsc) + "<br>";
+  }
+
+  if (upiId) {
+    html += "<br><strong>UPI</strong><br>";
+    html += "UPI ID: " + escapeHtml(upiId) + "<br>";
+    if (upiName) html += "Name: " + escapeHtml(upiName) + "<br>";
+  }
+
+  if (instructions) {
+    html += "<br>" + escapeHtml(instructions);
+  }
+
+  document.getElementById("destinationDetails").innerHTML =
+    html || "Payment details are not configured yet.";
+}
+
+async function loadFundProgress() {
+  const now = new Date();
+  const month = now.getMonth() + 1;
+  const year = now.getFullYear();
+
+  const { data: paid, error: paidError } = await supabaseClient
+    .from("public_paid_contributions")
+    .select("amount,contribution_month,contribution_year")
+    .eq("village_slug", village.slug)
+    .eq("contribution_month", month)
+    .eq("contribution_year", year);
+
+  if (paidError) {
+    console.error(paidError);
+    return;
+  }
+
+  const collected = (paid || []).reduce((sum, row) => sum + Number(row.amount || 0), 0);
+  document.getElementById("collectedAmount").textContent = rupees(collected);
+
+  document.getElementById("pendingAmount").textContent = "—";
+  document.getElementById("summaryText").textContent =
+    "Verified amount collected for " + monthNames[month - 1] + " " + year + ".";
+}
+
+async function loadPublicContributions() {
+  const tbody = document.getElementById("publicContributions");
+
+  const { data, error } = await supabaseClient
+    .from("public_paid_contributions")
+    .select("account_holder_name,amount,contribution_month,contribution_year,verified_at")
+    .eq("village_slug", village.slug)
+    .order("verified_at", { ascending: false })
+    .limit(100);
+
+  if (error) {
+    console.error(error);
+    tbody.innerHTML = '<tr><td colspan="3">Unable to load contributions.</td></tr>';
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="3">No verified contributions yet.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = data.map(row => {
+    const month = monthNames[Number(row.contribution_month) - 1] || row.contribution_month;
+    return "<tr>" +
+      "<td>" + escapeHtml(row.account_holder_name || "") + "</td>" +
+      "<td>" + escapeHtml(month + " " + row.contribution_year) + "</td>" +
+      "<td>" + rupees(row.amount) + "</td>" +
+      "</tr>";
+  }).join("");
+}
+
+function showPaymentForm() {
+  const amount = Number(document.getElementById("customAmount").value);
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    showStatus("paymentStatus", "Please enter a valid contribution amount.", "error");
+    return;
+  }
+
+  selectedAmount = amount;
+  document.getElementById("paymentAmount").value = amount;
+  document.getElementById("paymentForm").classList.remove("hidden");
+  document.getElementById("paymentForm").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+async function submitPayment() {
+  const name = document.getElementById("contributorName").value.trim();
+  const mobile = document.getElementById("contributorMobile").value.trim();
+  const amount = Number(document.getElementById("paymentAmount").value);
+  const utr = document.getElementById("utrReference").value.trim();
+  const month = Number(document.getElementById("paymentMonth").value);
+  const year = Number(document.getElementById("paymentYear").value);
+
+  if (!name || !/^[0-9]{10}$/.test(mobile) || !Number.isFinite(amount) || amount <= 0 || !utr) {
+    showStatus("submitStatus", "Please enter a valid name, 10-digit mobile number, amount and UTR/reference.", "error");
+    return;
+  }
+
+  const button = document.querySelector('#paymentForm button.primary');
+  button.disabled = true;
+  button.textContent = "Submitting...";
+
+  try {
+    const { data, error } = await supabaseClient.rpc("submit_payment", {
+      p_village_slug: village.slug,
+      p_account_holder_name: name,
+      p_mobile_number: mobile,
+      p_amount: amount,
+      p_contribution_month: month,
+      p_contribution_year: year,
+      p_utr_reference: utr
+    });
+
+    if (error) throw error;
+
+    showStatus("submitStatus", "Payment submitted successfully. It will appear publicly after admin verification.", "success");
+    document.getElementById("utrReference").value = "";
+    await loadFundProgress();
+  } catch (error) {
+    console.error(error);
+    showStatus("submitStatus", error.message || "Unable to submit payment.", "error");
+  } finally {
+    button.disabled = false;
+    button.textContent = "Submit Payment";
+  }
+}
+
+async function adminLogin() {
+  const email = document.getElementById("adminEmail").value.trim();
+  const password = document.getElementById("adminPassword").value;
+
+  if (!email || !password) {
+    showStatus("loginStatus", "Enter admin email and password.", "error");
+    return;
+  }
+
+  const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    showStatus("loginStatus", error.message, "error");
+    return;
+  }
+
+  document.getElementById("adminPassword").value = "";
+  await checkAdminSession();
+}
+
+async function checkAdminSession() {
+  const { data } = await supabaseClient.auth.getSession();
+
+  if (!data.session) {
+    document.getElementById("adminLogin").classList.remove("hidden");
+    document.getElementById("adminPanel").classList.add("hidden");
+    return;
+  }
+
+  const userId = data.session.user.id;
+
+  const { data: profile, error } = await supabaseClient
+    .from("profiles")
+    .select("role,village_id")
+    .eq("id", userId)
+    .single();
+
+  if (error || !profile || profile.role !== "admin") {
+    await supabaseClient.auth.signOut();
+    showStatus("loginStatus", "This account is not an administrator.", "error");
+    return;
+  }
+
+  if (profile.village_id !== village.id) {
+    await supabaseClient.auth.signOut();
+    showStatus("loginStatus", "This administrator is not assigned to " + village.name + ".", "error");
+    return;
+  }
+
+  document.getElementById("adminLogin").classList.add("hidden");
+  document.getElementById("adminPanel").classList.remove("hidden");
+  await loadPendingPayments();
+  await loadSettings();
+}
+
+async function adminLogout() {
+  await supabaseClient.auth.signOut();
+  document.getElementById("adminLogin").classList.remove("hidden");
+  document.getElementById("adminPanel").classList.add("hidden");
+}
+
+async function loadPendingPayments() {
+  const tbody = document.getElementById("pendingPayments");
+
+  const { data, error } = await supabaseClient
+    .from("admin_pending_contributions")
+    .select("*")
+    .eq("village_slug", village.slug)
+    .order("submitted_at", { ascending: false });
+
+  if (error) {
+    console.error(error);
+    tbody.innerHTML = '<tr><td colspan="6">Unable to load pending 

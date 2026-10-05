@@ -1,0 +1,2124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Village Fund - Onboard Village</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f6f8;
+            color: #1f2937;
+        }
+
+        header {
+            background: #166534;
+            color: white;
+            padding: 18px 24px;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        header p {
+            margin: 5px 0 0;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 25px auto;
+            padding: 0 16px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .card h2 {
+            margin-top: 0;
+            color: #166534;
+        }
+
+        .section-title {
+            margin-top: 25px;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e5e7eb;
+            color: #166534;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .full {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 7px;
+            font-size: 15px;
+            outline: none;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            border-color: #166534;
+            box-shadow: 0 0 0 2px rgba(22, 101, 52, 0.1);
+        }
+
+        textarea {
+            min-height: 90px;
+            resize: vertical;
+        }
+
+        .help {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .checkbox-row input {
+            width: auto;
+        }
+
+        button {
+            border: none;
+            border-radius: 7px;
+            padding: 11px 18px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .primary {
+            background: #166534;
+            color: white;
+        }
+
+        .primary:hover {
+            background: #14532d;
+        }
+
+        .secondary {
+            background: #e5e7eb;
+            color: #111827;
+        }
+
+        .danger {
+            background: #dc2626;
+            color: white;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .message {
+            padding: 12px 15px;
+            border-radius: 7px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        .info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .warning {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .user-info {
+            font-size: 14px;
+        }
+
+        .slug-preview {
+            background: #f3f4f6;
+            border-radius: 6px;
+            padding: 9px 11px;
+            font-size: 13px;
+            color: #374151;
+            margin-top: 6px;
+            word-break: break-all;
+        }
+
+        .phonepe-box {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 18px;
+            margin-top: 10px;
+        }
+
+        .security-note {
+            background: #fff7ed;
+            border: 1px solid #fed7aa;
+            color: #9a3412;
+            padding: 12px;
+            border-radius: 7px;
+            margin-top: 12px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .result-box {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 15px;
+        }
+
+        .result-box strong {
+            color: #166534;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th,
+        td {
+            border-bottom: 1px solid #e5e7eb;
+            padding: 11px;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        th {
+            background: #f9fafb;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-active {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-inactive {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        @media (max-width: 700px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .full {
+                grid-column: auto;
+            }
+
+            .card {
+                padding: 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Village Fund Management</h1>
+    <p>Super Admin - Village Onboarding</p>
+</header>
+
+<div class="container">
+
+    <!-- Login -->
+    <div id="loginCard" class="card">
+
+        <h2>Super Admin Login</h2>
+
+        <div id="loginMessage" class="message"></div>
+
+        <form id="loginForm">
+
+            <div class="grid">
+
+                <div>
+                    <label for="loginEmail">Email</label>
+                    <input
+                        type="email"
+                        id="loginEmail"
+                        autocomplete="username"
+                        required
+                    />
+                </div>
+
+                <div>
+                    <label for="loginPassword">Password</label>
+                    <input
+                        type="password"
+                        id="loginPassword"
+                        autocomplete="current-password"
+                        required
+                    />
+                </div>
+
+            </div>
+
+            <div class="button-row">
+                <button type="submit" class="primary">
+                    Login
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+
+
+    <!-- Admin Dashboard -->
+    <div id="dashboard" class="hidden">
+
+        <div class="card">
+
+            <div class="top-bar">
+
+                <div>
+                    <h2 style="margin-bottom: 5px;">
+                        Super Admin Dashboard
+                    </h2>
+
+                    <div id="loggedInUser" class="user-info"></div>
+                </div>
+
+                <button
+                    type="button"
+                    class="danger"
+                    onclick="logout()"
+                >
+                    Logout
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- Messages -->
+        <div id="pageMessage" class="message"></div>
+
+
+        <!-- Onboard Village -->
+        <div class="card">
+
+            <h2>Onboard New Village</h2>
+
+            <div class="message info" style="display:block;">
+                Create a village, assign its administrator, configure contribution
+                settings and optionally enable PhonePe payment processing.
+            </div>
+
+
+            <form id="onboardForm">
+
+                <!-- Village Details -->
+                <h3 class="section-title">
+                    1. Village Details
+                </h3>
+
+                <div class="grid">
+
+                    <div>
+                        <label for="villageName">
+                            Village Name *
+                        </label>
+
+                        <input
+                            type="text"
+                            id="villageName"
+                            placeholder="Example: Bondapalli"
+                            required
+                        />
+                    </div>
+
+
+                    <div>
+                        <label for="villageSlug">
+                            Village Slug *
+                        </label>
+
+                        <input
+                            type="text"
+                            id="villageSlug"
+                            placeholder="bondapalli"
+                            required
+                            pattern="[a-z0-9-]+"
+                        />
+
+                        <div class="help">
+                            Lowercase letters, numbers and hyphens only.
+                        </div>
+
+                        <div
+                            id="slugPreview"
+                            class="slug-preview"
+                        >
+                            Public URL will appear here.
+                        </div>
+                    </div>
+
+
+                    <div class="full">
+                        <label for="villageDescription">
+                            Village Description
+                        </label>
+
+                        <textarea
+                            id="villageDescription"
+                            placeholder="Enter a short description about the village..."
+                        ></textarea>
+                    </div>
+
+
+                    <div>
+                        <label for="villageStatus">
+                            Status
+                        </label>
+
+                        <select id="villageStatus">
+                            <option value="true">Active</option>
+                            <option value="false">Inactive</option>
+                        </select>
+                    </div>
+
+                </div>
+
+
+                <!-- Admin -->
+                <h3 class="section-title">
+                    2. Village Administrator
+                </h3>
+
+                <div class="grid">
+
+                    <div>
+                        <label for="adminName">
+                            Admin Full Name *
+                        </label>
+
+                        <input
+                            type="text"
+                            id="adminName"
+                            placeholder="Admin name"
+                            required
+                        />
+                    </div>
+
+
+                    <div>
+                        <label for="adminEmail">
+                            Admin Email *
+                        </label>
+
+                        <input
+                            type="email"
+                            id="adminEmail"
+                            placeholder="admin@example.com"
+                            required
+                        />
+                    </div>
+
+
+                    <div>
+                        <label for="adminMobile">
+                            Admin Mobile
+                        </label>
+
+                        <input
+                            type="tel"
+                            id="adminMobile"
+                            placeholder="9876543210"
+                            maxlength="15"
+                        />
+                    </div>
+
+                </div>
+
+
+                <!-- Fund Settings -->
+                <h3 class="section-title">
+                    3. Fund / Contribution Settings
+                </h3>
+
+                <div class="grid">
+
+                    <div>
+                        <label for="monthlyAmount">
+                            Default Contribution Amount
+                        </label>
+
+                        <input
+                            type="number"
+                            id="monthlyAmount"
+                            min="0"
+                            step="0.01"
+                            placeholder="100"
+                        />
+
+                        <div class="help">
+                            Example: ₹100 per member.
+                        </div>
+                    </div>
+
+
+                    <div>
+                        <label for="upiId">
+                            UPI ID
+                        </label>
+
+                        <input
+                            type="text"
+                            id="upiId"
+                            placeholder="village@upi"
+                        />
+                    </div>
+
+
+                    <div>
+                        <label for="upiName">
+                            UPI Account Name
+                        </label>
+
+                        <input
+                            type="text"
+                            id="upiName"
+                            placeholder="Village Fund Account"
+                        />
+                    </div>
+
+
+                    <div class="full">
+                        <label for="upiInstructions">
+                            Payment Instructions
+                        </label>
+
+                        <textarea
+                            id="upiInstructions"
+                            placeholder="Enter instructions shown to contributors..."
+                        ></textarea>
+                    </div>
+
+                </div>
+
+
+                <!-- Bank -->
+                <h3 class="section-title">
+                    4. Bank Account Details
+                </h3>
+
+                <div class="grid">
+
+                    <div>
+                        <label for="accountHolder">
+                            Account Holder Name
+                        </label>
+
+                        <input
+                            type="text"
+                            id="accountHolder"
+                            placeholder="Account holder name"
+                        />
+                    </div>
+
+
+                    <div>
+                        <label for="bankName">
+                            Bank Name
+                        </label>
+
+                        <input
+                            type="text"
+                            id="bankName"
+                            placeholder="Bank name"
+                        />
+                    </div>
+
+
+                    <div>
+                        <label for="accountNumber">
+                            Account Number
+                        </label>
+
+                        <input
+                            type="text"
+                            id="accountNumber"
+                            placeholder="Account number"
+                        />
+                    </div>
+
+
+                    <div>
+                        <label for="ifsc">
+                            IFSC Code
+                        </label>
+
+                        <input
+                            type="text"
+                            id="ifsc"
+                            placeholder="SBIN0000000"
+                        />
+                    </div>
+
+                </div>
+
+
+                <!-- PhonePe -->
+                <h3 class="section-title">
+                    5. PhonePe Configuration
+                </h3>
+
+                <div class="phonepe-box">
+
+                    <div class="checkbox-row">
+
+                        <input
+                            type="checkbox"
+                            id="phonePeEnabled"
+                        />
+
+                        <label
+                            for="phonePeEnabled"
+                            style="margin:0;"
+                        >
+                            Enable PhonePe payments for this village
+                        </label>
+
+                    </div>
+
+
+                    <div
+                        id="phonePeFields"
+                        class="hidden"
+                        style="margin-top:18px;"
+                    >
+
+                        <div class="grid">
+
+                            <div>
+                                <label for="phonePeEnvironment">
+                                    Environment
+                                </label>
+
+                                <select id="phonePeEnvironment">
+                                    <option value="UAT">
+                                        UAT / Test
+                                    </option>
+
+                                    <option value="PRODUCTION">
+                                        Production
+                                    </option>
+                                </select>
+                            </div>
+
+
+                            <div>
+                                <label for="phonePeMerchantId">
+                                    Merchant ID
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="phonePeMerchantId"
+                                    placeholder="PhonePe Merchant ID"
+                                />
+                            </div>
+
+
+                            <div>
+                                <label for="phonePeClientId">
+                                    Client ID
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="phonePeClientId"
+                                    placeholder="PhonePe Client ID"
+                                />
+                            </div>
+
+
+                            <div>
+                                <label for="phonePeClientSecret">
+                                    Client Secret
+                                </label>
+
+                                <input
+                                    type="password"
+                                    id="phonePeClientSecret"
+                                    placeholder="PhonePe Client Secret"
+                                    autocomplete="new-password"
+                                />
+                            </div>
+
+                        </div>
+
+
+                        <div class="security-note">
+
+                            <strong>Security:</strong>
+                            The PhonePe Client Secret must not be stored in this
+                            HTML file, browser localStorage, public JavaScript,
+                            or a publicly readable database table.
+
+                            It is submitted only to the secure
+                            <strong>onboard-village</strong> Supabase Edge
+                            Function over HTTPS. The Edge Function should store
+                            it in a protected server-side location.
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Submit -->
+                <div class="button-row">
+
+                    <button
+                        type="submit"
+                        id="onboardButton"
+                        class="primary"
+                    >
+                        Onboard Village
+                    </button>
+
+                    <button
+                        type="button"
+                        class="secondary"
+                        onclick="resetForm()"
+                    >
+                        Clear
+                    </button>
+
+                </div>
+
+            </form>
+
+
+            <div
+                id="onboardResult"
+                class="result-box hidden"
+            ></div>
+
+        </div>
+
+
+        <!-- Existing Villages -->
+        <div class="card">
+
+            <div class="top-bar">
+
+                <div>
+                    <h2>Onboarded Villages</h2>
+                    <div class="help">
+                        Villages currently available in the system.
+                    </div>
+                </div>
+
+                <button
+                    type="button"
+                    class="secondary"
+                    onclick="loadVillages()"
+                >
+                    Refresh
+                </button>
+
+            </div>
+
+
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Village</th>
+                            <th>Slug</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="villagesTableBody">
+                        <tr>
+                            <td colspan="4">
+                                Loading...
+                            </td>
+                        </tr>
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    /*
+     * ============================================================
+     * SUPABASE CONFIGURATION
+     * ============================================================
+     */
+
+    const SUPABASE_URL =
+        "https://jegwmoundvbngyjgvytl.supabase.co";
+
+    
+const SUPABASE_PUBLISHABLE_KEY =
+    "sb_publishable_LH5kSeveJMUEp3vMj6Uppg_DGKckdbo";
+
+
+    const supabaseClient =
+        supabase.createClient(
+            SUPABASE_URL,
+            SUPABASE_PUBLISHABLE_KEY
+        );
+
+
+    /*
+     * ============================================================
+     * DOM HELPERS
+     * ============================================================
+     */
+
+    function showMessage(
+        elementId,
+        message,
+        type = "info"
+    ) {
+        const element =
+            document.getElementById(elementId);
+
+        if (!element) {
+            return;
+        }
+
+        element.className =
+            "message " + type;
+
+        element.textContent =
+            message;
+
+        element.style.display =
+            "block";
+    }
+
+
+    function hideMessage(elementId) {
+
+        const element =
+            document.getElementById(elementId);
+
+        if (!element) {
+            return;
+        }
+
+        element.style.display =
+            "none";
+    }
+
+
+    function escapeHtml(value) {
+
+        if (value === null || value === undefined) {
+            return "";
+        }
+
+        return String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+
+    /*
+     * ============================================================
+     * SLUG GENERATION
+     * ============================================================
+     */
+
+    function generateSlug(value) {
+
+        return value
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9\s-]/g, "")
+            .replace(/\s+/g, "-")
+            .replace(/-+/g, "-");
+    }
+
+
+    function updateSlugPreview() {
+
+        const slug =
+            document
+                .getElementById("villageSlug")
+                .value
+                .trim();
+
+        const preview =
+            document.getElementById("slugPreview");
+
+        if (!slug) {
+
+            preview.textContent =
+                "Public URL will appear here.";
+
+            return;
+        }
+
+        const baseUrl =
+            window.location.origin;
+
+        preview.textContent =
+            baseUrl + "/" + slug;
+    }
+
+
+    /*
+     * ============================================================
+     * PHONEPE UI
+     * ============================================================
+     */
+
+    function updatePhonePeVisibility() {
+
+        const enabled =
+            document
+                .getElementById("phonePeEnabled")
+                .checked;
+
+        const fields =
+            document.getElementById("phonePeFields");
+
+        if (enabled) {
+            fields.classList.remove("hidden");
+        } else {
+            fields.classList.add("hidden");
+        }
+    }
+
+
+    /*
+     * ============================================================
+     * AUTHENTICATION
+     * ============================================================
+     */
+
+    async function checkSession() {
+
+        try {
+
+            const {
+                data,
+                error
+            } =
+                await supabaseClient.auth.getSession();
+
+
+            if (error) {
+                throw error;
+            }
+
+
+            if (!data.session) {
+
+                showLogin();
+
+                return;
+            }
+
+
+            await initializeAdmin(
+                data.session
+            );
+
+        } catch (error) {
+
+            console.error(error);
+
+            showLogin();
+
+            showMessage(
+                "loginMessage",
+                error.message ||
+                "Unable to check login session.",
+                "error"
+            );
+        }
+    }
+
+
+    function showLogin() {
+
+        document
+            .getElementById("loginCard")
+            .classList.remove("hidden");
+
+        document
+            .getElementById("dashboard")
+            .classList.add("hidden");
+    }
+
+
+    function showDashboard() {
+
+        document
+            .getElementById("loginCard")
+            .classList.add("hidden");
+
+        document
+            .getElementById("dashboard")
+            .classList.remove("hidden");
+    }
+
+
+    async function login(event) {
+
+        event.preventDefault();
+
+        hideMessage("loginMessage");
+
+        const email =
+            document
+                .getElementById("loginEmail")
+                .value
+                .trim();
+
+        const password =
+            document
+                .getElementById("loginPassword")
+                .value;
+
+
+        try {
+
+            const {
+                data,
+                error
+            } =
+                await supabaseClient.auth.signInWithPassword({
+                    email,
+                    password
+                });
+
+
+            if (error) {
+                throw error;
+            }
+
+
+            await initializeAdmin(
+                data.session
+            );
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            showMessage(
+                "loginMessage",
+                error.message ||
+                "Login failed.",
+                "error"
+            );
+        }
+    }
+
+
+    /*
+     * ============================================================
+     * SUPER ADMIN VALIDATION
+     * ============================================================
+     */
+
+    async function initializeAdmin(session) {
+
+        if (!session || !session.user) {
+            showLogin();
+            return;
+        }
+
+
+        try {
+
+            const {
+                data: profile,
+                error
+            } =
+                await supabaseClient
+                    .from("profiles")
+                    .select("*")
+                    .eq("id", session.user.id)
+                    .single();
+
+
+            if (error) {
+                throw error;
+            }
+
+
+            if (!profile) {
+
+                throw new Error(
+                    "User profile was not found."
+                );
+            }
+
+
+            const role =
+                String(
+                    profile.role || ""
+                ).toLowerCase();
+
+
+            if (
+                role !== "super_admin" &&
+                role !== "superadmin"
+            ) {
+
+                await supabaseClient.auth.signOut();
+
+                throw new Error(
+                    "Access denied. Super Admin access is required."
+                );
+            }
+
+
+            document
+                .getElementById("loggedInUser")
+                .textContent =
+                "Logged in as: " +
+                (
+                    profile.name ||
+                    session.user.email
+                );
+
+
+            showDashboard();
+
+            await loadVillages();
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            await supabaseClient.auth.signOut();
+
+            showLogin();
+
+            showMessage(
+                "loginMessage",
+                error.message ||
+                "You are not authorized to access this page.",
+                "error"
+            );
+        }
+    }
+
+
+    async function logout() {
+
+        await supabaseClient.auth.signOut();
+
+        showDashboardMessageAfterLogout();
+    }
+
+
+    function showDashboardMessageAfterLogout() {
+
+        document
+            .getElementById("dashboard")
+            .classList.add("hidden");
+
+        document
+            .getElementById("loginCard")
+            .classList.remove("hidden");
+
+        document
+            .getElementById("loginPassword")
+            .value = "";
+
+        showMessage(
+            "loginMessage",
+            "You have been logged out.",
+            "info"
+        );
+    }
+
+
+    /*
+     * ============================================================
+     * ONBOARD VILLAGE
+     * ============================================================
+     */
+
+    async function onboardVillage(event) {
+
+        event.preventDefault();
+
+        hideMessage("pageMessage");
+
+        const button =
+            document.getElementById(
+                "onboardButton"
+            );
+
+
+        const villageName =
+            document
+                .getElementById("villageName")
+                .value
+                .trim();
+
+
+        const villageSlug =
+            document
+                .getElementById("villageSlug")
+                .value
+                .trim()
+                .toLowerCase();
+
+
+        const villageDescription =
+            document
+                .getElementById("villageDescription")
+                .value
+                .trim();
+
+
+        const isActive =
+            document
+                .getElementById("villageStatus")
+                .value === "true";
+
+
+        const adminName =
+            document
+                .getElementById("adminName")
+                .value
+                .trim();
+
+
+        const adminEmail =
+            document
+                .getElementById("adminEmail")
+                .value
+                .trim()
+                .toLowerCase();
+
+
+        const adminMobile =
+            document
+                .getElementById("adminMobile")
+                .value
+                .trim();
+
+
+        const monthlyAmountValue =
+            document
+                .getElementById("monthlyAmount")
+                .value
+                .trim();
+
+
+        const monthlyAmount =
+            monthlyAmountValue
+                ? Number(monthlyAmountValue)
+                : 0;
+
+
+        const upiId =
+            document
+                .getElementById("upiId")
+                .value
+                .trim();
+
+
+        const upiName =
+            document
+                .getElementById("upiName")
+                .value
+                .trim();
+
+
+        const upiInstructions =
+            document
+                .getElementById("upiInstructions")
+                .value
+                .trim();
+
+
+        const accountHolder =
+            document
+                .getElementById("accountHolder")
+                .value
+                .trim();
+
+
+        const bankName =
+            document
+                .getElementById("bankName")
+                .value
+                .trim();
+
+
+        const accountNumber =
+            document
+                .getElementById("accountNumber")
+                .value
+                .trim();
+
+
+        const ifsc =
+            document
+                .getElementById("ifsc")
+                .value
+                .trim()
+                .toUpperCase();
+
+
+        const phonePeEnabled =
+            document
+                .getElementById("phonePeEnabled")
+                .checked;
+
+
+        const phonePeEnvironment =
+            document
+                .getElementById("phonePeEnvironment")
+                .value;
+
+
+        const phonePeMerchantId =
+            document
+                .getElementById("phonePeMerchantId")
+                .value
+                .trim();
+
+
+        const phonePeClientId =
+            document
+                .getElementById("phonePeClientId")
+                .value
+                .trim();
+
+
+        const phonePeClientSecret =
+            document
+                .getElementById("phonePeClientSecret")
+                .value;
+
+
+        /*
+         * --------------------------------------------------------
+         * CLIENT-SIDE VALIDATION
+         * --------------------------------------------------------
+         */
+
+        if (!villageName) {
+
+            showMessage(
+                "pageMessage",
+                "Village name is required.",
+                "error"
+            );
+
+            return;
+        }
+
+
+        if (!/^[a-z0-9-]+$/.test(villageSlug)) {
+
+            showMessage(
+                "pageMessage",
+                "Village slug can contain only lowercase letters, numbers and hyphens.",
+                "error"
+            );
+
+            return;
+        }
+
+
+        if (!adminName) {
+
+            showMessage(
+                "pageMessage",
+                "Admin name is required.",
+                "error"
+            );
+
+            return;
+        }
+
+
+        if (!adminEmail) {
+
+            showMessage(
+                "pageMessage",
+                "Admin email is required.",
+                "error"
+            );
+
+            return;
+        }
+
+
+        if (
+            monthlyAmountValue &&
+            (
+                Number.isNaN(monthlyAmount) ||
+                monthlyAmount < 0
+            )
+        ) {
+
+            showMessage(
+                "pageMessage",
+                "Contribution amount is invalid.",
+                "error"
+            );
+
+            return;
+        }
+
+
+        if (phonePeEnabled) {
+
+            if (!phonePeMerchantId) {
+
+                showMessage(
+                    "pageMessage",
+                    "PhonePe Merchant ID is required when PhonePe is enabled.",
+                    "error"
+                );
+
+                return;
+            }
+
+
+            if (!phonePeClientId) {
+
+                showMessage(
+                    "pageMessage",
+                    "PhonePe Client ID is required when PhonePe is enabled.",
+                    "error"
+                );
+
+                return;
+            }
+
+
+            if (!phonePeClientSecret) {
+
+                showMessage(
+                    "pageMessage",
+                    "PhonePe Client Secret is required when PhonePe is enabled.",
+                    "error"
+                );
+
+                return;
+            }
+        }
+
+
+        /*
+         * --------------------------------------------------------
+         * REQUEST BODY
+         * --------------------------------------------------------
+         *
+         * The Edge Function is responsible for:
+         *
+         * 1. Creating the village.
+         * 2. Creating/inviting the admin user.
+         * 3. Creating the admin profile.
+         * 4. Creating fund settings.
+         * 5. Securely storing PhonePe credentials.
+         * 6. Performing server-side validation.
+         * 7. Enforcing Super Admin authorization.
+         *
+         * Do NOT directly insert these records from this page.
+         */
+
+        const requestBody = {
+
+            village: {
+                name: villageName,
+                slug: villageSlug,
+                description: villageDescription,
+                is_active: isActive
+            },
+
+
+            admin: {
+                name: adminName,
+                email: adminEmail,
+                mobile: adminMobile
+            },
+
+
+            fund_settings: {
+                monthly_amount: monthlyAmount,
+                upi_id: upiId,
+                upi_name: upiName,
+                upi_instructions: upiInstructions,
+
+                bank_account_holder:
+                    accountHolder,
+
+                bank_name:
+                    bankName,
+
+                account_number:
+                    accountNumber,
+
+                ifsc:
+                    ifsc
+            },
+
+
+            phonepe: {
+
+                enabled:
+                    phonePeEnabled,
+
+                environment:
+                    phonePeEnvironment,
+
+                merchant_id:
+                    phonePeMerchantId,
+
+                client_id:
+                    phonePeClientId,
+
+                /*
+                 * This value exists only in the request body.
+                 * The Edge Function must never return it.
+                 */
+                client_secret:
+                    phonePeClientSecret
+            }
+        };
+
+
+        try {
+
+            button.disabled = true;
+
+            button.textContent =
+                "Creating Village...";
+
+
+            showMessage(
+                "pageMessage",
+                "Creating village and configuring administrator...",
+                "info"
+            );
+
+
+            const {
+                data,
+                error
+            } =
+                await supabaseClient.functions.invoke(
+                    "onboard-village",
+                    {
+                        body: requestBody
+                    }
+                );
+
+
+            if (error) {
+
+                throw error;
+            }
+
+
+            /*
+             * Never display returned secrets.
+             */
+
+            displayOnboardResult(data);
+
+
+            showMessage(
+                "pageMessage",
+                "Village onboarded successfully.",
+                "success"
+            );
+
+
+            /*
+             * Clear sensitive PhonePe secret immediately.
+             */
+
+            document
+                .getElementById(
+                    "phonePeClientSecret"
+                )
+                .value = "";
+
+
+            await loadVillages();
+
+
+        } catch (error) {
+
+            console.error(
+                "Village onboarding failed:",
+                error
+            );
+
+
+            let message =
+                "Unable to onboard village.";
+
+
+            if (error && error.message) {
+                message =
+                    error.message;
+            }
+
+
+            showMessage(
+                "pageMessage",
+                message,
+                "error"
+            );
+
+        } finally {
+
+            button.disabled = false;
+
+            button.textContent =
+                "Onboard Village";
+        }
+    }
+
+
+    /*
+     * ============================================================
+     * ONBOARDING RESULT
+     * ============================================================
+     */
+
+    function displayOnboardResult(data) {
+
+        const result =
+            document.getElementById(
+                "onboardResult"
+            );
+
+
+        let village =
+            data &&
+            data.village
+                ? data.village
+                : null;
+
+
+        let admin =
+            data &&
+            data.admin
+                ? data.admin
+                : null;
+
+
+        let message =
+            data &&
+            data.message
+                ? data.message
+                : "Village created successfully.";
+
+
+        let html =
+            "<strong>Village onboarded successfully</strong><br><br>";
+
+
+        html +=
+            escapeHtml(message);
+
+
+        if (village) {
+
+            html +=
+                "<br><br>";
+
+            html +=
+                "<strong>Village:</strong> " +
+                escapeHtml(
+                    village.name ||
+                    ""
+                );
+
+
+            if (village.slug) {
+
+                html +=
+                    "<br><strong>Public URL:</strong> " +
+                    escapeHtml(
+                        window.location.origin +
+                        "/" +
+                        village.slug
+                    );
+            }
+        }
+
+
+        if (admin) {
+
+            html +=
+                "<br><br><strong>Administrator:</strong> " +
+                escapeHtml(
+                    admin.name ||
+                    admin.email ||
+                    ""
+                );
+
+
+            if (admin.email) {
+
+                html +=
+                    "<br><strong>Email:</strong> " +
+                    escapeHtml(
+                        admin.email
+                    );
+            }
+
+
+            if (
+                admin.invite_sent !==
+                undefined
+            ) {
+
+                html +=
+                    "<br><strong>Invite sent:</strong> " +
+                    (
+                        admin.invite_sent
+                            ? "Yes"
+                            : "No"
+                    );
+            }
+        }
+
+
+        result.innerHTML =
+            html;
+
+        result.classList.remove(
+            "hidden"
+        );
+    }
+
+
+    /*
+     * ============================================================
+     * RESET FORM
+     * ============================================================
+     */
+
+    function resetForm() {
+
+        document
+            .getElementById(
+                "onboardForm"
+            )
+            .reset();
+
+
+        document
+            .getElementById(
+                "phonePeFields"
+            )
+            .classList.add(
+                "hidden"
+            );
+
+
+        document
+            .getElementById(
+                "onboardResult"
+            )
+            .classList.add(
+                "hidden"
+            );
+
+
+        document
+            .getElementById(
+                "slugPreview"
+            )
+            .textContent =
+            "Public URL will appear here.";
+    }
+
+
+    /*
+     * ============================================================
+     * LOAD EXISTING VILLAGES
+     * ============================================================
+     */
+
+    async function loadVillages() {
+
+        const tableBody =
+            document.getElementById(
+                "villagesTableBody"
+            );
+
+
+        tableBody.innerHTML =
+            `
+            <tr>
+                <td colspan="4">
+                    Loading...
+                </td>
+            </tr>
+            `;
+
+
+        try {
+
+            const {
+                data,
+                error
+            } =
+                await supabaseClient
+                    .from("villages")
+                    .select(
+                        "id, name, slug, is_active, created_at"
+                    )
+                    .order(
+                        "created_at",
+                        {
+                            ascending: false
+                        }
+                    );
+
+
+            if (error) {
+                throw error;
+            }
+
+
+            if (!data || data.length === 0) {
+
+                tableBody.innerHTML =
+                    `
+                    <tr>
+                        <td colspan="4">
+                            No villages onboarded yet.
+                        </td>
+                    </tr>
+                    `;
+
+                return;
+            }
+
+
+            tableBody.innerHTML =
+                data
+                    .map(village => {
+
+                        const status =
+                            village.is_active
+                                ? `
+                                  <span class="badge badge-active">
+                                      Active
+                                  </span>
+                                  `
+                                : `
+                                  <span class="badge badge-inactive">
+                                      Inactive
+                                  </span>
+                                  `;
+
+
+                        const created =
+                            village.created_at
+                                ? new Date(
+                                    village.created_at
+                                  ).toLocaleDateString(
+                                    "en-IN"
+                                  )
+                                : "";
+
+
+                        return `
+                            <tr>
+                                <td>
+                                    ${escapeHtml(
+                                        village.name
+                                    )}
+                                </td>
+
+                                <td>
+                                    ${escapeHtml(
+                                        village.slug
+                                    )}
+                                </td>
+
+                                <td>
+                                    ${status}
+                                </td>
+
+                                <td>
+                                    ${escapeHtml(
+                                        created
+                                    )}
+                                </td>
+                            </tr>
+                        `;
+
+                    })
+                    .join("");
+
+
+        } catch (error) {
+
+            console.error(
+                "Unable to load villages:",
+                error
+            );
+
+
+            tableBody.innerHTML =
+                `
+                <tr>
+                    <td colspan="4">
+                        Unable to load villages.
+                    </td>
+                </tr>
+                `;
+        }
+    }
+
+
+    /*
+     * ============================================================
+     * EVENT HANDLERS
+     * ============================================================
+     */
+
+    document
+        .getElementById("loginForm")
+        .addEventListener(
+            "submit",
+            login
+        );
+
+
+    document
+        .getElementById("onboardForm")
+        .addEventListener(
+            "submit",
+            onboardVillage
+        );
+
+
+    document
+        .getElementById("phonePeEnabled")
+        .addEventListener(
+            "change",
+            updatePhonePeVisibility
+        );
+
+
+    document
+        .getElementById("villageName")
+        .addEventListener(
+            "input",
+            function () {
+
+                const slugInput =
+                    document.getElementById(
+                        "villageSlug"
+                    );
+
+
+                /*
+                 * Automatically generate slug while
+                 * user is entering village name.
+                 */
+
+                if (
+                    !slugInput.dataset.manual
+                ) {
+
+                    slugInput.value =
+                        generateSlug(
+                            this.value
+                        );
+                }
+
+
+                updateSlugPreview();
+            }
+        );
+
+
+    document
+        .getElementById("villageSlug")
+        .addEventListener(
+            "input",
+            function () {
+
+                this.dataset.manual =
+                    "true";
+
+                this.value =
+                    generateSlug(
+                        this.value
+                    );
+
+                updateSlugPreview();
+            }
+        );
+
+
+    /*
+     * ============================================================
+     * AUTH STATE CHANGES
+     * ============================================================
+     */
+
+    supabaseClient.auth.onAuthStateChange(
+        async (event, session) => {
+
+            if (
+                event === "SIGNED_OUT"
+            ) {
+
+                showLogin();
+
+                return;
+            }
+
+
+            if (
+                event === "SIGNED_IN" &&
+                session
+            ) {
+
+                await initializeAdmin(
+                    session
+                );
+            }
+        }
+    );
+
+
+    /*
+     * ============================================================
+     * INITIALIZE
+     * ============================================================
+     */
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        function () {
+
+            checkSession();
+
+        }
+    );
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="theme-color" content="#673ab7">
+    <meta name="description" content="Penubaka Village Fund">
+
+    <title>Penubaka Village Fund</title>
+
+    <link rel="manifest" href="/manifest.webmanifest">
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f5f6fa;
+            color: #222;
+        }
+
+        header {
+            background: linear-gradient(135deg, #673ab7, #512da8);
+            color: white;
+            padding: 24px 16px;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0 0 6px;
+            font-size: 26px;
+        }
+
+        header p {
+            margin: 0;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            padding: 16px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        h2 {
+            margin-top: 0;
+            color: #512da8;
+        }
+
+        .progress-container {
+            background: #e5e5e5;
+            height: 18px;
+            border-radius: 20px;
+            overflow: hidden;
+            margin: 12px 0;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: #673ab7;
+            transition: width 0.4s;
+        }
+
+        .amount-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .amount-buttons button {
+            padding: 12px 5px;
+            border: 1px solid #673ab7;
+            background: white;
+            color: #673ab7;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .amount-buttons button.selected {
+            background: #673ab7;
+            color: white;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 12px;
+            margin: 6px 0 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        button.primary {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            background: #673ab7;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button.secondary {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #673ab7;
+            border-radius: 8px;
+            background: white;
+            color: #673ab7;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button.danger {
+            padding: 9px 14px;
+            border: none;
+            border-radius: 7px;
+            background: #d32f2f;
+            color: white;
+            cursor: pointer;
+        }
+
+        button.success {
+            padding: 9px 14px;
+            border: none;
+            border-radius: 7px;
+            background: #2e7d32;
+            color: white;
+            cursor: pointer;
+        }
+
+        .payment-info {
+            background: #f3efff;
+            border-left: 4px solid #673ab7;
+            padding: 14px;
+            border-radius: 8px;
+            margin: 12px 0;
+        }
+
+        .warning {
+            background: #fff8e1;
+            border-left: 4px solid #ff9800;
+            padding: 14px;
+            border-radius: 8px;
+            margin: 12px 0;
+        }
+
+        .success-message {
+            background: #e8f5e9;
+            border-left: 4px solid #2e7d32;
+            padding: 14px;
+            border-radius: 8px;
+            margin: 12px 0;
+        }
+
+        .error-message {
+            background: #ffebee;
+            border-left: 4px solid #d32f2f;
+            padding: 14px;
+            border-radius: 8px;
+            margin: 12px 0;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .stat {
+            background: #f7f7f7;
+            padding: 14px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat strong {
+            display: block;
+            font-size: 20px;
+            color: #512da8;
+            margin-bottom: 5px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+        }
+
+        th {
+            background: #f3f3f3;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .small {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .amount-display {
+            text-align: center;
+            font-size: 28px;
+            font-weight: bold;
+            color: #512da8;
+            margin: 12px 0;
+        }
+
+        .admin-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        footer {
+            text-align: center;
+            color: #777;
+            padding: 25px 10px;
+            font-size: 13px;
+        }
+
+        @media (max-width: 600px) {
+            .amount-buttons {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            th,
+            td {
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Penubaka Village Fund</h1>
+    <p>Monthly contribution fund for our village</p>
+</header>
+
+<div class="container">
+
+    <!-- FUND SUMMARY -->
+    <section class="card">
+        <h2>Fund Progress</h2>
+
+        <div class="stats">
+            <div class="stat">
+                <strong id="targetAmount">₹0</strong>
+                Monthly Target
+            </div>
+
+            <div class="stat">
+                <strong id="collectedAmount">₹0</strong>
+                Collected
+            </div>
+
+            <div class="stat">
+                <strong id="pendingAmount">₹0</strong>
+                Pending
+            </div>
+        </div>
+
+        <div class="progress-container">
+            <div id="progressBar" class="progress-bar"></div>
+        </div>
+
+        <div id="progressText" class="small">
+            Loading fund progress...
+        </div>
+    </section>
+
+    <!-- PAYMENT -->
+    <section class="card">
+
+        <h2>Monthly Contribution</h2>
+
+        <p>
+            Select your contribution amount.
+        </p>
+
+        <div class="amount-buttons">
+            <button type="button" onclick="selectAmount(50, this)">₹50</button>
+            <button type="button" onclick="selectAmount(100, this)">₹100</button>
+            <button type="button" onclick="selectAmount(150, this)">₹150</button>
+            <button type="button" onclick="selectAmount(200, this)">₹200</button>
+        </div>
+
+        <label>Custom Amount</label>
+
+        <input
+            type="number"
+            id="customAmount"
+            min="1"
+            step="1"
+            placeholder="Enter amount"
+            oninput="customAmountChanged()"
+        >
+
+        <div class="amount-display">
+            ₹<span id="selectedAmount">50</span>
+        </div>
+
+        <div id="destinationDetails" class="payment-info">
+            Loading payment details...
+        </div>
+
+        <div class="warning">
+            <strong>Payment process</strong><br><br>
+            1. Select your contribution amount.<br>
+            2. Tap <strong>Pay Now with PhonePe</strong>.<br>
+            3. Complete the payment.<br>
+            4. Return to this page.<br>
+            5. Enter your UTR / transaction reference number.
+        </div>
+
+        <button
+            type="button"
+            class="primary"
+            onclick="payNow()"
+        >
+            Pay Now with PhonePe
+        </button>
+
+        <div id="paymentStatus"></div>
+
+    </section>
+
+    <!-- PAYMENT SUBMISSION -->
+    <section id="paymentForm" class="card hidden">
+
+        <h2>Submit Payment Details</h2>
+
+        <p class="small">
+            Enter the details after completing your payment.
+        </p>
+
+        <label>Account Holder Name</label>
+
+        <input
+            type="text"
+            id="contributorName"
+            placeholder="Enter account-holder name"
+            required
+        >
+
+        <label>Mobile Number</label>
+
+        <input
+            type="tel"
+            id="contributorMobile"
+            placeholder="Enter mobile number"
+            maxlength="10"
+            required
+        >
+
+        <label>Amount Paid</label>
+
+        <input
+            type="number"
+            id="paymentAmount"
+            min="1"
+            step="1"
+            required
+        >
+
+        <label>UTR / Transaction Reference</label>
+
+        <input
+            type="text"
+            id="utrReference"
+            placeholder="Enter UTR / transaction reference"
+            required
+        >
+
+        <label>Month</label>
+
+        <select id="paymentMonth">
+        </select>
+
+        <label>Year</label>
+
+        <select id="paymentYear">
+        </select>
+
+        <button
+            type="button"
+            class="primary"
+            onclick="submitPayment()"
+        >
+            Submit Payment
+        </button>
+
+        <div id="submitStatus"></div>
+
+    </section>
+
+    <!-- PUBLIC CONTRIBUTIONS -->
+    <section class="card">
+
+        <h2>Verified Contributions</h2>
+
+        <p class="small">
+            Only verified contributions are displayed publicly.
+            Mobile numbers and UTR numbers are never shown here.
+        </p>
+
+        <div class="table-container">
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Month</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+
+                <tbody id="publicContributions">
+                    <tr>
+                        <td colspan="3">
+                            Loading...
+                        </td>
+                    </tr>
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+    <!-- ADMIN LOGIN -->
+    <section class="card">
+
+        <h2>Admin</h2>
+
+        <div id="adminLogin">
+
+            <label>Email</label>
+
+            <input
+                type="email"
+                id="adminEmail"
+                placeholder="Admin email"
+            >
+
+            <label>Password</label>
+
+            <input
+                type="password"
+                id="adminPassword"
+                placeholder="Admin password"
+            >
+
+            <button
+                type="button"
+                class="primary"
+                onclick="adminLogin()"
+            >
+                Admin Login
+            </button>
+
+            <div id="loginStatus"></div>
+
+        </div>
+
+        <div id="adminPanel" class="hidden">
+
+            <h2>Admin Dashboard</h2>
+
+            <button
+                type="button"
+                class="secondary"
+                onclick="adminLogout()"
+            >
+                Logout
+            </button>
+
+            <br><br>
+
+            <!-- PENDING PAYMENTS -->
+            <h3>Pending Payments</h3>
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Mobile</th>
+                            <th>Amount</th>
+                            <th>Month</th>
+                            <th>UTR</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="pendingPayments">
+                        <tr>
+                            <td colspan="6">
+                                Loading...
+                            </td>
+                        </tr>
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <br>
+
+            <!-- FUND SETTINGS -->
+            <h3>Fund Settings</h3>
+
+            <label>Village Name</label>
+
+            <input
+                type="text"
+                id="settingVillageName"
+            >
+
+            <label>Monthly Amount</label>
+
+            <input
+                type="number"
+                id="settingMonthlyAmount"
+                min="1"
+            >
+
+            <label>UPI ID</label>
+
+            <input
+                type="text"
+                id="settingUpiId"
+                placeholder="example@upi"
+            >
+
+            <label>UPI Name</label>
+
+            <input
+                type="text"
+                id="settingUpiName"
+            >
+
+            <label>UPI Instructions</label>
+
+            <input
+                type="text"
+                id="settingUpiInstructions"
+            >
+
+            <label>Bank Account Holder</label>
+
+            <input
+                type="text"
+                id="settingBankHolder"
+            >
+
+            <label>Bank Name</label>
+
+            <input
+                type="text"
+                id="settingBankName"
+            >
+
+            <label>Account Number</label>
+
+            <input
+                type="text"
+                id="settingAccountNumber"
+            >
+
+            <label>IFSC Code</label>
+
+            <input
+                type="text"
+                id="settingIfsc"
+            >
+
+            <button
+                type="button"
+                class="primary"
+                onclick="saveSettings()"
+            >
+                Save Settings
+            </button>
+
+            <div id="settingsStatus"></div>
+
+        </div>
+
+    </section>
+
+</div>
+
+<footer>
+    Penubaka Village Fund
+</footer>
+
+
+<script>
+
+    // ============================================================
+    // SUPABASE CONFIGURATION
+    // ============================================================
+
+    const SUPABASE_URL =
+        "https://jegwmoundvbngyjgvytl.supabase.co";
+
+    const SUPABASE_ANON_KEY =
+        "sb_publishable_LH5kSeveJMUEp3vMj6Uppg_DGKckdbo";
+
+    const supabaseClient =
+        supabase.createClient(
+            SUPABASE_URL,
+            SUPABASE_ANON_KEY
+        );
+
+
+    // ============================================================
+    // GLOBAL VARIABLES
+    // ============================================================
+
+    let selectedAmount = 50;
+
+    let fundSettings = null;
+
+
+    // ============================================================
+    // INITIALIZATION
+    // ============================================================
+
+    document.addEventListener("DOMContentLoaded", async function () {
+
+        initializeMonthYear();
+
+        await loadSettings();
+
+        await loadFundProgress();
+
+        await loadPublicContributions();
+
+        setSelectedAmount(50);
+
+        checkAdminSession();
+
+    });
+
+
+    // ============================================================
+    // MONTH / YEAR
+    // ============================================================
+
+    function initializeMonthYear() {
+
+        const monthSelect =
+            document.getElementById("paymentMonth");
+
+        const yearSelect =
+            document.getElementById("paymentYear");
+
+        const months = [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December"
+        ];
+
+        const now = new Date();
+
+        const currentMonth =
+            now.getMonth() + 1;
+
+        const currentYear =
+            now.getFullYear();
+
+        monthSelect.innerHTML = "";
+
+        months.forEach(function (month, index) {
+
+            const option =
+                document.createElement("option");
+
+            option.value = index + 1;
+
+            option.textContent = month;
+
+            if (index + 1 === currentMonth) {
+                option.selected = true;
+            }
+
+            monthSelect.appendChild(option);
+
+        });
+
+        yearSelect.innerHTML = "";
+
+        for (
+            let year = currentYear - 1;
+            year <= currentYear + 1;
+            year++
+        ) {
+
+            const option =
+                document.createElement("option");
+
+            option.value = year;
+
+            option.textContent = year;
+
+            if (year === currentYear) {
+                option.selected = true;
+            }
+
+            yearSelect.appendChild(option);
+        }
+
+    }
+
+
+    // ============================================================
+    // AMOUNT SELECTION
+    // ============================================================
+
+    function selectAmount(amount, button) {
+
+        selectedAmount = Number(amount);
+
+        document.getElementById("customAmount").value = "";
+
+        setSelectedAmount(selectedAmount);
+
+        document
+            .querySelectorAll(".amount-buttons button")
+            .forEach(function (btn) {
+                btn.classList.remove("selected");
+            });
+
+        if (button) {
+            button.classList.add("selected");
+        }
+
+    }
+
+
+    function customAmountChanged() {
+
+        const input =
+            document.getElementById("customAmount");
+
+        const value =
+            Number(input.value);
+
+        if (
+            Number.isFinite(value) &&
+            value > 0
+        ) {
+
+            selectedAmount = value;
+
+            setSelectedAmount(value);
+
+            document
+                .querySelectorAll(".amount-buttons button")
+                .forEach(function (btn) {
+                    btn.classList.remove("selected");
+                });
+
+        }
+
+    }
+
+
+    function setSelectedAmount(amount) {
+
+        selectedAmount = Number(amount);
+
+        document.getElementById("selectedAmount")
+            .textContent =
+            Number(amount).toLocaleString("en-IN");
+
+        document.getElementById("paymentAmount")
+            .value =
+            Number(amount);
+
+    }
+
+
+    // ============================================================
+    // LOAD FUND SETTINGS
+    // ============================================================
+
+    async function loadSettings() {
+
+        const {
+            data,
+            error
+        } = await supabaseClient
+            .from("fund_settings")
+            .select("*")
+            .eq("id", 1)
+            .single();
+
+        if (error) {
+
+            console.error(error);
+
+            document.getElementById("destinationDetails")
+                .innerHTML =
+                `
+                <strong>Payment details unavailable.</strong>
+                <br>
+                Please contact the fund administrator.
+                `;
+
+            return;
+        }
+
+        fundSettings = data;
+
+        updatePaymentDetails();
+
+        document.getElementById("settingVillageName")
+            .value =
+            data.village_name || "";
+
+        document.getElementById("settingMonthlyAmount")
+            .value =
+            data.monthly_amount || 50;
+
+        document.getElementById("settingUpiId")
+            .value =
+            data.upi_id || "";
+
+        document.getElementById("settingUpiName")
+            .value =
+            data.upi_name || "";
+
+        document.getElementById("settingUpiInstruction
